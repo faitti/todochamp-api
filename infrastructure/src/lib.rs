@@ -1,14 +1,20 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub mod schema;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use diesel::{
+    r2d2::{ConnectionManager, Pool},
+    MysqlConnection,
+};
+use dotenvy::dotenv;
+use std::env;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub fn get_connection_pool() -> Pool<ConnectionManager<MysqlConnection>> {
+    dotenv().ok();
+
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL not set");
+    let manager = ConnectionManager::<MysqlConnection>::new(database_url);
+
+    Pool::builder()
+        .test_on_check_out(true)
+        .build(manager)
+        .expect("Could not build connection pool")
 }
